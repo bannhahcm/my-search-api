@@ -1,0 +1,6 @@
+# Bỏ qua thư mục thư viện cồng kềnh
+node_modules/
+# Bỏ qua tệp hệ thống của macOS
+.DS_Store
+# Bỏ qua tệp chứa thông tin nhạy cảm, mật khẩu
+.env
