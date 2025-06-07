@@ -70,7 +70,37 @@ app.get('/search', async (req, res) => {
     res.status(500).json({ error: 'Đã có lỗi xảy ra ở phía server.' });
   }
 });
+// --- BƯỚC 3.6: TẠO ĐƯỜNG LINK API CUNG CẤP DỮ LIỆU CHO MENU ---
+app.get('/api/menu-data', async (req, res) => {
+  console.log("Đang lấy dữ liệu cho menu...");
+  try {
+    // Thực thi nhiều truy vấn cùng lúc để tăng hiệu năng
+    const [projectTypes, locations, featuredProjects, featuredNews] = await Promise.all([
+      // Lấy danh sách Loại hình dự án
+      pool.query(`SELECT name, slug FROM "ProjectType" ORDER BY name ASC`),
+      // Lấy danh sách Địa điểm (chỉ Tỉnh/Thành phố)
+      pool.query(`SELECT name, slug FROM "Location" WHERE type = 'CITY' ORDER BY name ASC`),
+      // Lấy 2 dự án nổi bật (ví dụ)
+      pool.query(`SELECT name, slug, cached_project_type_slug, cached_location_slug FROM "Project" LIMIT 2`),
+      // Lấy 2 tin tức nổi bật
+      pool.query(`SELECT title, slug, cached_category_slug FROM "NewsArticle" WHERE is_featured = true LIMIT 2`)
+    ]);
 
+    // Trả về một đối tượng JSON chứa tất cả dữ liệu
+    res.json({
+      projectTypes: projectTypes.rows,
+      locations: locations.rows,
+      featured: {
+        projects: featuredProjects.rows,
+        news: featuredNews.rows,
+      }
+    });
+
+  } catch (error) {
+    console.error('Lỗi khi lấy dữ liệu menu:', error);
+    res.status(500).json({ error: 'Đã có lỗi xảy ra ở phía server.' });
+  }
+});
 // --- BƯỚC 4: KHỞI ĐỘNG SERVER ---
 app.listen(port, () => {
   console.log(`API Server đang chạy tại http://localhost:${port}`);
